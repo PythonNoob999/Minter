@@ -1,6 +1,6 @@
 from Minter.storage import BasicStorage
-from Minter.wallet import Wallet
-from Minter.abi import ABI
+from Minter.types.wallet import Wallet
+from Minter.types.abi import ABI
 from Minter.transaction_builder import TransactionBuilder
 from aiohttp import ClientSession
 from web3 import AsyncWeb3, AsyncHTTPProvider
@@ -20,46 +20,9 @@ class Minter:
         # for rate limiting purposes
         self.lock = asyncio.Semaphore(semaphore_lock)
 
-    # shortcuts
     async def connect(self) -> None:
         await self.w3.provider.cache_async_session(ClientSession())
         await self.storage.build()
-
-    async def import_data(self, data_file: str):
-        return await self.storage.import_data(data_file=data_file)
-    
-    async def wallets(
-        self,
-        filter_by: Callable = None
-    ) -> List[Wallet]:
-        return await self.storage.get_wallets(filter_by=filter_by)
-    
-    async def abis(
-        self,
-    ):
-        return await self.storage.get_abis()
-    
-    async def nft_data(
-        self,
-    ):
-        return await self.storage.get_nft_data()
-    
-    async def store_txs(
-        self,
-        nft_contract: str,
-        txs
-    ):
-        current_data = await self.nft_data()
-
-        if nft_contract.lower() not in [k.lower() for k in current_data.keys()]:
-            current_data[nft_contract] = {}
-            
-        for item in txs:
-            current_data[nft_contract][item[0].address] = item[1]
-        
-        await self.storage.set("nft_data", current_data)
-    
-    # methods
     
     async def execute(
         self,
@@ -81,7 +44,7 @@ class Minter:
         **method_kwargs
     ):
         if not wallets:
-            wallets = await self.wallets()
+            wallets = await self.storage.wallets()
 
         _tasks = [
             asyncio.create_task(
@@ -106,7 +69,7 @@ class Minter:
         return_raw_data: bool = False
     ) -> Union[List[float], float]:
         if not wallets:
-            wallets = await self.wallets()
+            wallets = await self.storage.wallets()
         
         result = await self.execute_many(
             tx_builder_method=self.tx_builder.get_balance,
@@ -137,7 +100,7 @@ class Minter:
             float, the total amount of ETH sent by the fees_wallet'''
         total = 0
         if not wallets:
-            wallets = await self.wallets()
+            wallets = await self.storage.wallets()
         
         for wallet in wallets:
             n = amount

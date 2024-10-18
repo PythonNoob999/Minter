@@ -1,6 +1,6 @@
 from web3 import AsyncWeb3, Account
-from Minter.wallet import Wallet
-from Minter.abi import ABI
+from Minter.types.wallet import Wallet
+from Minter.types.abi import ABI
 from typing import Union, List
 import asyncio
 
