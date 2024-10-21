@@ -1,5 +1,8 @@
 from .types.wallet import Wallet
-from .types.abi import ABI
+from .types.abis import (
+    ABI,
+    OpenseaABI
+)
 from .types.nft_data import NFTData, ContractData
 from .transaction_builder import TransactionBuilder
 from .storage import BaseStorage, BasicStorage

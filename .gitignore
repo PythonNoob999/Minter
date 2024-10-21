@@ -1,4 +1,6 @@
 **__pycache__
-*.json
+md.json
+minter_data.json
+*.gitignore
 *.db
 test.py

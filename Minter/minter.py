@@ -1,6 +1,6 @@
 from Minter.storage import BasicStorage
 from Minter.types.wallet import Wallet
-from Minter.types.abi import ABI
+from Minter.types.abis.abi import ABI
 from Minter.types.nft_data import NFTData
 from Minter.transaction_builder import TransactionBuilder
 from aiohttp import ClientSession
@@ -8,7 +8,9 @@ from web3 import AsyncWeb3, AsyncHTTPProvider
 from web3.types import TxReceipt
 from typing import List, Union, Callable, Any
 from time import perf_counter
-import asyncio
+import asyncio, json
+
+NFT_ABI: dict = json.load(open("Minter/data/nft_abi.json"))
 
 class Minter:
     def __init__(
@@ -51,7 +53,7 @@ class Minter:
 
         _tasks = [
             asyncio.create_task(
-                self.execute(tx_builder_method, wallet, **method_kwargs)
+                self.execute(tx_builder_method, wallet=wallet, **method_kwargs)
             ) for wallet in wallets
         ]
         result = []
@@ -204,17 +206,20 @@ class Minter:
         abi: ABI,
         wallets: List[Wallet] = None,
         args: dict = {},
+        price: float = 0,
         gas: int = 250000,
         return_signed_tx: bool = False,
         save_tx_data: bool = True,
         save_in_background: bool = True
     ) -> List[Union[int, asyncio.Task]]:
         start = perf_counter()
+        value = self.w3.to_wei(price, "ether")
         result = await self.execute_many(
             tx_builder_method=self.tx_builder.execute_write_function,
             wallets=wallets,
             bulk=True,
             contract_address=nft_contract,
+            value=value,
             abi=abi,
             args=args,
             gas=gas,
@@ -227,6 +232,95 @@ class Minter:
         
         # saving data and shit
         if save_tx_data:
+            # for custom platform mints
+            if hasattr(abi, "nft_address"):
+                nft_contract = abi.nft_address
             await self._save_nft_data(nft_contract, result, save_in_background)
 
         return int(end-start)
+    
+    async def get_nft_balances(
+        self,
+        nft_contract: str,
+        wallets: List[Wallet] = None
+    ):
+        abi = NFT_ABI
+        result = await self.execute_many(
+            tx_builder_method=self.tx_builder.execute_read_function,
+            wallets=wallets,
+            bulk=True,
+            contract_address=self.w3.to_checksum_address(nft_contract),
+            abi=ABI(
+                name="balanceOf",
+                abi=abi,
+                function_name="balanceOf",
+                default_args={"owner": (lambda abi : getattr(abi, "wallet", Wallet(None, None)).address)}
+            ),
+        )
+        
+        return sum([r for r in result if isinstance(r, int)])
+    
+    async def send_nfts(
+        self,
+        nft_contract: str,
+        to: Union[Wallet, str],
+        sleep: int = 3,
+        limit: int = float("inf"),
+        wallets: List[Wallet] = None
+    ):
+        nft_data = await self.storage.nft_data()
+        
+        if not wallets:
+            wallets = await self.storage.wallets()
+        
+        wallets = wallets
+        result = []
+        n = 0
+
+        for wallet in wallets:
+            token_ids = nft_data.get(nft_contract, wallet.address)
+
+            if not token_ids:
+                continue
+
+            for _id in token_ids:
+                if n >= limit:
+                    break
+
+                has_it = await self.execute(
+                    tx_builder_method=self.tx_builder.execute_read_function,
+                    contract_address=nft_contract,
+                    abi=ABI(
+                        "ownerOf",
+                        abi=NFT_ABI,
+                        function_name="ownerOf",
+                        default_args={
+                            "tokenId": _id
+                        }
+                    )
+                )
+
+                if not has_it:
+                    continue
+
+                tx = await self.execute(
+                    tx_builder_method=self.tx_builder.execute_write_function,
+                    wallet=wallet,
+                    contract_address=nft_contract,
+                    abi=ABI(
+                        "safeTransferFrom",
+                        abi=NFT_ABI,
+                        function_name="safeTransferFrom",
+                        default_args={
+                            "from": wallet.address,
+                            "to": (to if isinstance(to, str) else to.address),
+                            "tokenId": _id
+                        }
+                    ),
+                )
+
+                if tx:
+                    result.append(tx)
+                    n += 1
+                    await asyncio.sleep(sleep)
+        return result

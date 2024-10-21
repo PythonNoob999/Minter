@@ -1,2 +1,5 @@
 from .wallet import Wallet
-from .abi import ABI
+from .abis import (
+    ABI,
+    OpenseaABI
+)

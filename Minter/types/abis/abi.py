@@ -22,6 +22,20 @@ class ABI:
             if func.get("name", None) == function_name and func.get("type", None) == "function":
                 self.function = func
                 break
+
+    def copy(self) -> "ABI":
+        return ABI(
+            name=self.name,
+            abi=self.abi.copy(),
+            function_name=self.function.get("name", None),
+            default_args=self.args
+        )
+
+    def set_wallet(
+        self,
+        wallet: Wallet
+    ):
+        self.wallet = wallet
     
     def get_args(
         self,
@@ -41,7 +55,7 @@ class ABI:
                 target = default[arg]
 
             if callable(target):
-                target = target()
+                target = target(self)
 
             args[arg] = target
 

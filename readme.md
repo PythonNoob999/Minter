@@ -179,10 +179,12 @@ _For more examples, please refer to the [Documentation](https://github.com/Pytho
 
 <!-- ROADMAP -->
 ## Todo
-- [ ] Add price option to mint_bulk
-- [ ] Add custom ABIs
-- [ ] Add get_nft_balances Method
-- [ ] Add send_nfts Method
+- [X] Add price option to mint_bulk
+- [X] Add custom ABIs
+- [X] Add get_nft_balances Method
+- [X] Add send_nfts Method
+- [ ] Add Documentaion
+- [ ] Add Custom Exceptions
 - [ ] Add More Storage Options
 
 See the [open issues](https://github.com/PythonNoob999/Minter/issues) for a full list of proposed features (and known issues).

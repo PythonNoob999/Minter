@@ -12,7 +12,7 @@ class ContractData:
     nft_contract: str
     minters: Dict[str, List[Union[int]]]
 
-    def get_minter(self, address: str) -> Union[None, List[str]]:
+    def get_minter(self, address: str) -> Union[None, List[int]]:
         return self.minters.get(address, None)
     
     def __add__(self, other_contract: "ContractData") -> "ContractData":
@@ -44,11 +44,12 @@ class NFTData:
         self,
         nft_contract: str,
         address: str
-    ) -> Union[None, List[str]]:
-        nft_data = self.nfts.get(nft_contract, None)
+    ) -> Union[None, List[int]]:
+        nft_data =ContractData(nft_contract, {})
 
-        if not nft_data:
-            raise ValueError(f"{nft_contract} does not exist in nft data")
+        for nft in self.nfts:
+            if nft_contract.lower() == nft.lower():
+                nft_data = self.nfts[nft]
         
         return nft_data.get_minter(address)
     

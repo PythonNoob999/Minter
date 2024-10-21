@@ -4,9 +4,9 @@ from web3.exceptions import TransactionNotFound
 from web3.contract import AsyncContract
 from web3.contract.async_contract import AsyncContractFunction
 from Minter.types.wallet import Wallet
-from Minter.types.abi import ABI
+from Minter.types.abis.abi import ABI
 from typing import Union, List
-import asyncio
+import asyncio, json
 
 class TransactionBuilder:
     
@@ -137,30 +137,34 @@ class TransactionBuilder:
     
     async def execute_write_function(
         self,
-        from_wallet: Wallet,
+        wallet: Wallet,
         contract_address: str,
         abi: ABI,
-        gas: int = 25000,
+        value: int = 0,
+        gas: int = 250000,
         args: dict = {},
         return_signed_tx: bool = False
     ):
         if not abi.function:
             raise ValueError(f"ABI {abi.name} doesn't have a function")
+        abi = abi.copy()
+        abi.set_wallet(wallet)
 
         contract = self.get_contract(contract_address, abi)
         args = abi.get_args(args)
         func: AsyncContractFunction = getattr(contract.functions, abi.function["name"])
 
         tx = await func(**args).build_transaction({
-            "from": self.w3.to_checksum_address(from_wallet.address),
+            "from": self.w3.to_checksum_address(wallet.address),
+            "value": value,
             "gas": gas,
             "gasPrice": await self.gas,
-            "nonce": await self.nonce(from_wallet)
+            "nonce": await self.nonce(wallet)
         })
         result = await self.execute(
             tx,
             sign=True,
-            signer=from_wallet,
+            signer=wallet,
             broadcast=not return_signed_tx
         )
         return result
@@ -169,15 +173,17 @@ class TransactionBuilder:
         self,
         contract_address: str,
         abi: ABI,
-        *args
+        wallet: Wallet = None,
+        args: dict = {}
     ):
         if not abi.function:
             raise ValueError(f"ABI {abi.name} doesn't have a function")
+        abi = abi.copy()
+        abi.set_wallet(wallet=wallet)
 
         contract = self.get_contract(contract_address, abi)
         func: AsyncContractFunction = getattr(contract.functions, abi.function["name"])
-        result = await func(*args).call()
-
+        result = await func(**abi.get_args(args)).call()
         return result
     
     async def get_nft_max_supply(
@@ -189,19 +195,7 @@ class TransactionBuilder:
                 contract_address=self.w3.to_checksum_address(contract_address),
                 abi=ABI(
                     "get_max_supply",
-                    abi=[
-                        {
-                            "inputs": [],
-                            "name": "maxSupply",
-                            "outputs": [{
-                                "internalType": "uint256",
-                                "name": "",
-                                "type": "uint256"
-                            }],
-                            "stateMutability": "view",
-                            "type": "function"
-                        }
-                    ],
+                    abi=json.load(open("Minter/data/nft_abi.json", "r")),
                     function_name="maxSupply"
                 )
             )
