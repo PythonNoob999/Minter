@@ -1,6 +1,8 @@
 **__pycache__
 md.json
 minter_data.json
-*.gitignore
+.gitignore
 *.db
 test.py
+build
+Minter.egg-info
