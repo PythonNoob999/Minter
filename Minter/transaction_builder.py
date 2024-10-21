@@ -1,4 +1,8 @@
 from web3 import AsyncWeb3, Account
+from web3.types import TxReceipt
+from web3.exceptions import TransactionNotFound
+from web3.contract import AsyncContract
+from web3.contract.async_contract import AsyncContractFunction
 from Minter.types.wallet import Wallet
 from Minter.types.abi import ABI
 from typing import Union, List
@@ -12,6 +16,16 @@ class TransactionBuilder:
     ) -> None:
         self.w3 = w3
 
+    def get_contract(
+        self,
+        address: str,
+        abi: ABI
+    ) -> AsyncContract:
+        return self.w3.eth.contract(
+            self.w3.to_checksum_address(address),
+            abi=abi.abi
+        )
+
     @classmethod
     def sign_tx(
         cls,
@@ -19,6 +33,15 @@ class TransactionBuilder:
         wallet: Union[Wallet, str]
     ):
         return Account.sign_transaction(tx, wallet if isinstance(wallet, str) else wallet.private_key)
+    
+    async def get_tx(
+        self,
+        tx: str
+    ):
+        try:
+            return await self.w3.eth.get_transaction_receipt(tx)
+        except:
+            return None
     
     async def execute(
         self,
@@ -111,6 +134,81 @@ class TransactionBuilder:
             signer=from_wallet,
             broadcast=not return_signed_tx,
         ))
+    
+    async def execute_write_function(
+        self,
+        from_wallet: Wallet,
+        contract_address: str,
+        abi: ABI,
+        gas: int = 25000,
+        args: dict = {},
+        return_signed_tx: bool = False
+    ):
+        if not abi.function:
+            raise ValueError(f"ABI {abi.name} doesn't have a function")
+
+        contract = self.get_contract(contract_address, abi)
+        args = abi.get_args(args)
+        func: AsyncContractFunction = getattr(contract.functions, abi.function["name"])
+
+        tx = await func(**args).build_transaction({
+            "from": self.w3.to_checksum_address(from_wallet.address),
+            "gas": gas,
+            "gasPrice": await self.gas,
+            "nonce": await self.nonce(from_wallet)
+        })
+        result = await self.execute(
+            tx,
+            sign=True,
+            signer=from_wallet,
+            broadcast=not return_signed_tx
+        )
+        return result
+    
+    async def execute_read_function(
+        self,
+        contract_address: str,
+        abi: ABI,
+        *args
+    ):
+        if not abi.function:
+            raise ValueError(f"ABI {abi.name} doesn't have a function")
+
+        contract = self.get_contract(contract_address, abi)
+        func: AsyncContractFunction = getattr(contract.functions, abi.function["name"])
+        result = await func(*args).call()
+
+        return result
+    
+    async def get_nft_max_supply(
+        self,
+        contract_address: str,
+    ) -> int:
+        try:
+            supply = await self.execute_read_function(
+                contract_address=self.w3.to_checksum_address(contract_address),
+                abi=ABI(
+                    "get_max_supply",
+                    abi=[
+                        {
+                            "inputs": [],
+                            "name": "maxSupply",
+                            "outputs": [{
+                                "internalType": "uint256",
+                                "name": "",
+                                "type": "uint256"
+                            }],
+                            "stateMutability": "view",
+                            "type": "function"
+                        }
+                    ],
+                    function_name="maxSupply"
+                )
+            )
+        except:
+            supply = 200_000
+
+        return supply
 
     '''
     async def get_nfts(

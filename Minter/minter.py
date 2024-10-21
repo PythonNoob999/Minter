@@ -1,10 +1,13 @@
 from Minter.storage import BasicStorage
 from Minter.types.wallet import Wallet
 from Minter.types.abi import ABI
+from Minter.types.nft_data import NFTData
 from Minter.transaction_builder import TransactionBuilder
 from aiohttp import ClientSession
 from web3 import AsyncWeb3, AsyncHTTPProvider
-from typing import List, Union, Callable
+from web3.types import TxReceipt
+from typing import List, Union, Callable, Any
+from time import perf_counter
 import asyncio
 
 class Minter:
@@ -42,7 +45,7 @@ class Minter:
         wallets: List[Wallet] = None,
         bulk: bool = False,
         **method_kwargs
-    ):
+    ) -> List[Any]:
         if not wallets:
             wallets = await self.storage.wallets()
 
@@ -60,6 +63,75 @@ class Minter:
                 result.append(await task)
         
         return result
+    
+    def process_ids(
+        self,
+        receipt: TxReceipt,
+        rng: int
+    ) -> List[int]:
+        ids = []
+
+        for log in receipt.get("logs"):
+            _ids = [
+                self.w3.to_int(hexstr=topic.hex()) for topic in log.get("topics") if 0 < self.w3.to_int(hexstr=topic.hex()) <= rng
+            ]
+            ids += _ids
+
+        return ids
+    
+    # raw methods
+    async def _save_nft_data(
+        self,
+        nft_contract: str,
+        data: List[Union[None, str]],
+        task: bool,
+        sleep: int = 5
+    ):
+        if task:
+            return await asyncio.create_task(
+                self._save_nft_data(
+                    nft_contract=nft_contract,
+                    data=data,
+                    task=False,
+                    sleep=sleep
+                )
+            )
+        
+        await asyncio.sleep(sleep)
+        supply = await self.execute(
+            tx_builder_method=self.tx_builder.get_nft_max_supply,
+            contract_address=nft_contract
+        )
+        receipts: List[TxReceipt] =(await asyncio.gather(
+            *[
+                asyncio.create_task(self.execute(
+                    tx_builder_method=self.tx_builder.get_tx,
+                    tx=tx
+                )) for tx in data if tx is not None
+            ]
+        ))
+        receipts = [rec for rec in receipts if rec is not None]
+        filtered_data = {nft_contract: {}}
+
+        for receipt in receipts:
+            receipt_owner = receipt.get("from")
+
+            # success
+            if receipt.get("status") == 1:
+                nft_ids = self.process_ids(receipt, supply)
+                filtered_data[nft_contract][receipt_owner] = nft_ids
+            # ??
+            elif receipt.get("status") is None:
+                continue
+
+            # failed tx
+            else:
+                continue
+        
+        # save ids
+        await self.storage.insert_data(nft_data=NFTData(
+            filtered_data
+        ))
     
     # abstract methods
     async def get_balances(
@@ -125,3 +197,36 @@ class Minter:
             await asyncio.sleep(hold)
             total += n
         return total
+    
+    async def mint_bulk(
+        self,
+        nft_contract: str,
+        abi: ABI,
+        wallets: List[Wallet] = None,
+        args: dict = {},
+        gas: int = 250000,
+        return_signed_tx: bool = False,
+        save_tx_data: bool = True,
+        save_in_background: bool = True
+    ) -> List[Union[int, asyncio.Task]]:
+        start = perf_counter()
+        result = await self.execute_many(
+            tx_builder_method=self.tx_builder.execute_write_function,
+            wallets=wallets,
+            bulk=True,
+            contract_address=nft_contract,
+            abi=abi,
+            args=args,
+            gas=gas,
+            return_signed_tx=return_signed_tx
+        )
+        end = perf_counter()
+
+        if return_signed_tx:
+            return result
+        
+        # saving data and shit
+        if save_tx_data:
+            await self._save_nft_data(nft_contract, result, save_in_background)
+
+        return int(end-start)

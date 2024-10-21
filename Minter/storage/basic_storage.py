@@ -1,6 +1,6 @@
 from Minter.types.wallet import Wallet
 from Minter.types.abi import ABI
-from Minter.types.nft_data import NFTData
+from Minter.types.nft_data import NFTData, ContractData
 from Minter.storage.base_storage import BaseStorage
 from typing import Union, List, Dict, Callable
 import json
@@ -41,26 +41,27 @@ class BasicStorage(BaseStorage):
 
         if data_file:
             data = json.load(open(data_file, "r+"))
-            wallets = [Wallet(*c) for c in data["wallets"]]
-            abis = [ABI(*c) for c in data["abis"]]
+            wallets = [Wallet(**c) for c in data["wallets"]]
+            abis = [ABI(**c) for c in data["abis"]]
             nft_data = NFTData(data["nft_data"])
 
         if wallets:
-            stored_wallets = await self.get_wallets()
+            stored_wallets = await self.wallets()
             stored_wallets = stored_wallets + wallets
             await self.set("wallets", [wallet.json for wallet in stored_wallets])
             data["wallets"] = len(stored_wallets)
         
         if abis:
-            stored_abis = await self.get_abis()
+            stored_abis = await self.abis()
             stored_abis = stored_abis + abis
             await self.set("abis", [abi.json for abi in abis])
             data["abis"] = len(stored_abis)
 
         if nft_data:
-            current_data = await self.get_nft_data()
+            n = '0x7695Ad12A94B4BA7a3eB073638279250509fBEA7'
+            current_data = await self.nft_data()
             current_data.combine(nft_data)
-            await self.set("nft_data", current_data)
+            await self.set("nft_data", current_data.raw_json)
             data["nft_data"] = current_data
 
         return data
