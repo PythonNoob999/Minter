@@ -179,6 +179,8 @@ _For more examples, please refer to the [Documentation](https://github.com/Pytho
 
 <!-- ROADMAP -->
 ## Todo
+- [ ] Add price option to mint_bulk
+- [ ] Add custom ABIs
 - [ ] Add get_nft_balances Method
 - [ ] Add send_nfts Method
 - [ ] Add More Storage Options
