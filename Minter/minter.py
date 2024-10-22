@@ -210,7 +210,7 @@ class Minter:
         gas: int = 250000,
         return_signed_tx: bool = False,
         save_tx_data: bool = True,
-        save_in_background: bool = True
+        save_in_background: bool = False
     ) -> List[Union[int, asyncio.Task]]:
         start = perf_counter()
         value = self.w3.to_wei(price, "ether")
