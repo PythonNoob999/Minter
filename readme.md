@@ -171,7 +171,7 @@ wallets = [
 await minter.storage.insert_data(wallets=wallets)
 ```
 
-_For more examples, please refer to the [Documentation](https://github.com/PythonNoob999/Minter/examples)_
+_For more examples, please refer to the [Documentation](https://github.com/PythonNoob999/Minter/tree/main/examples)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
