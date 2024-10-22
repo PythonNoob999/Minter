@@ -1,4 +1,4 @@
-<!-- https://www.github.com/PythonNoob999/tree/main/examples -->
+<!-- https://www.github.com/PythonNoob999/Minter/tree/main/examples -->
 
 ## Getting started
 **to start using the minter you need an RPC**
@@ -25,18 +25,18 @@ asyncio.run(main())
 
 ### wallets
 
-* [create wallets](https://www.github.com/PythonNoob999/tree/main/examples/create_wallets.py)
-* [import wallets](https://www.github.com/PythonNoob999/tree/main/examples/import_wallets.py)
+* [create wallets](https://www.github.com/PythonNoob999/Minter/tree/main/examples/create_wallets.py)
+* [import wallets](https://www.github.com/PythonNoob999/Minter/tree/main/examples/import_wallets.py)
 
 ### ABIs
 
-* [usage example](https://www.github.com/PythonNoob999/tree/main/examples/abi.py)
-* [custom abi](https://www.github.com/PythonNoob999/tree/main/examples/custom_abi.py)
+* [usage example](https://www.github.com/PythonNoob999/Minter/tree/main/examples/abi.py)
+* [custom abi](https://www.github.com/PythonNoob999/Minter/tree/main/examples/custom_abi.py)
 
 ### storage
 
-* [export data](https://www.github.com/PythonNoob999/tree/main/examples/export.py)
+* [export data](https://www.github.com/PythonNoob999/Minter/tree/main/examples/export.py)
 
 ### minting
 
-* [minting](https://www.github.com/PythonNoob999/tree/main/examples/mint.py)
+* [minting](https://www.github.com/PythonNoob999/Minter/tree/main/examples/mint.py)
