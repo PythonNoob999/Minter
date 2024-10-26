@@ -10,7 +10,8 @@ from typing import List, Union, Callable, Any
 from time import perf_counter
 import asyncio, json
 
-NFT_ABI: dict = json.load(open("Minter/data/nft_abi.json"))
+path = "/".join(__file__.split("\\")[:-1])
+NFT_ABI: dict = json.load(open(path+"/data/nft_abi.json"))
 
 class Minter:
     def __init__(
