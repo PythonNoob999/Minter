@@ -58,7 +58,6 @@ class BasicStorage(BaseStorage):
             data["abis"] = len(stored_abis)
 
         if nft_data:
-            n = '0x7695Ad12A94B4BA7a3eB073638279250509fBEA7'
             current_data = await self.nft_data()
             current_data.combine(nft_data)
             await self.set("nft_data", current_data.raw_json)
