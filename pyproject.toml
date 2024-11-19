@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "minter"
+version = "1.0.2"
+dependencies = [
+    "kvsqlite",
+    "web3"
+]
+requires-python = ">= 3.8"
+authors = [
+    {"name"= "SpicyPenguin"}
+]
+description = "a lib to mint nft's on any EVM chain"
+readme = "readme.md"
