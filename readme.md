@@ -106,19 +106,19 @@ Here are the instalation steps
 
 #### Method 1 from source
   1. Clone the repo
-    ```sh
+  ```sh
     git clone https://github.com/PythonNoob999/Minter.git
-    ```
+  ```
   2. Build lib
-    ```sh
+  ```sh
     pip install . -U
-    ```
+  ```
 
 #### Method 2 from pip (recommended)
     1. install via pip
-    ```sh
+  ```sh
     pip install minter
-    ```
+  ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
