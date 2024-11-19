@@ -1,12 +1,10 @@
 from web3 import AsyncWeb3, Account
-from web3.types import TxReceipt
-from web3.exceptions import TransactionNotFound
 from web3.contract import AsyncContract
 from web3.contract.async_contract import AsyncContractFunction
 from Minter.types.wallet import Wallet
 from Minter.types.abis.abi import ABI
-from typing import Union, List
-import asyncio, json
+from typing import Union
+import json
 
 class TransactionBuilder:
     

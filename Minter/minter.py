@@ -8,10 +8,10 @@ from web3 import AsyncWeb3, AsyncHTTPProvider
 from web3.types import TxReceipt
 from typing import List, Union, Callable, Any
 from time import perf_counter
-import asyncio, json
+import asyncio, json, pathlib
 
-path = "/".join(__file__.split("\\")[:-1])
-NFT_ABI: dict = json.load(open(path+"/data/nft_abi.json"))
+path = pathlib.Path(__file__).parent
+NFT_ABI: dict = json.load(open(path/"data/nft_abi.json"))
 
 class Minter:
     def __init__(

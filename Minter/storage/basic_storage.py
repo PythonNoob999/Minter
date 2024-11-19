@@ -1,8 +1,8 @@
 from Minter.types.wallet import Wallet
 from Minter.types.abis.abi import ABI
-from Minter.types.nft_data import NFTData, ContractData
+from Minter.types.nft_data import NFTData
 from Minter.storage.base_storage import BaseStorage
-from typing import Union, List, Dict, Callable
+from typing import Union, List, Dict
 import json
 
 class BasicStorage(BaseStorage):

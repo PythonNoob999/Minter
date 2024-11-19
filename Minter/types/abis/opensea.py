@@ -1,8 +1,8 @@
 from Minter.types.abis.abi import ABI
-import json, os
+import json, pathlib
 
-path = "/".join(__file__.split("\\")[:-3])
-OPENSEA_ABI = json.load(open(path+"/data/opensea_abi.json", "r+"))
+path = pathlib.Path(__file__).parent.parent.parent
+OPENSEA_ABI = json.load(open(path/"data/opensea_abi.json", "r+"))
 
 class OpenseaABI(ABI):
     def __init__(
