@@ -200,20 +200,7 @@ class TransactionBuilder:
                 )
             )
         except:
+            # yeah, ik this sucks :'(
             supply = 200_000
 
         return supply
-
-    '''
-    async def get_nfts(
-        self,
-        wallet: str,
-        tx: str
-    ):
-        rec = await self.w3.eth.get_transaction_receipt(tx)
-        _ids = []
-        for log in rec.logs:
-            _id = self.w3.to_int(log.topics[3])
-            if _id < 1_000_000:
-                _ids.append(_id)
-        return [wallet, _ids]'''
