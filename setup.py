@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="Minter",
-    version="1.0.3",
+    version="1.0.4",
     description="a lib to mint nft's on any EVM chain",
     long_description=open("readme.md", "r", encoding="utf-8").read(),
     author="SpicyPenguin",

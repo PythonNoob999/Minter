@@ -1,4 +1,4 @@
-from Minter.storage import BasicStorage
+from Minter.storage import BasicStorage, MemoryStorage
 from Minter.types.wallet import Wallet
 from Minter.types.abis.abi import ABI
 from Minter.types.nft_data import NFTData
@@ -50,7 +50,11 @@ class Minter:
         **method_kwargs
     ) -> List[Any]:
         if not wallets:
-            wallets = await self.storage.wallets()
+
+            if isinstance(self.storage, MemoryStorage):
+                wallets = self.storage.wallets()
+            else:
+                wallets = await self.storage.wallets()
 
         _tasks = [
             asyncio.create_task(
@@ -132,9 +136,10 @@ class Minter:
                 continue
         
         # save ids
-        await self.storage.insert_data(nft_data=NFTData(
-            filtered_data
-        ))
+        if isinstance(self.storage, MemoryStorage):
+            self.storage.insert_data(nft_data=NFTData(filtered_data))
+        else:
+            await self.storage.insert_data(nft_data=NFTData(filtered_data))
     
     # abstract methods
     async def get_balances(
@@ -144,7 +149,10 @@ class Minter:
         return_raw_data: bool = False
     ) -> Union[List[float], float]:
         if not wallets:
-            wallets = await self.storage.wallets()
+            if isinstance(self.storage, MemoryStorage):
+                wallets = self.storage.wallets()
+            else:
+                wallets = await self.storage.wallets()
         
         result = await self.execute_many(
             tx_builder_method=self.tx_builder.get_balance,
@@ -175,7 +183,10 @@ class Minter:
             float, the total amount of ETH sent by the fees_wallet'''
         total = 0
         if not wallets:
-            wallets = await self.storage.wallets()
+            if isinstance(self.storage, MemoryStorage):
+                wallets = self.storage.wallets()
+            else:
+                wallets = await self.storage.wallets()
         
         for wallet in wallets:
             n = amount
@@ -269,10 +280,16 @@ class Minter:
         limit: int = float("inf"),
         wallets: List[Wallet] = None
     ):
-        nft_data = await self.storage.nft_data()
+        if isinstance(self.storage, MemoryStorage):
+            nft_data = self.storage.nft_data()
+        else:
+            nft_data = await self.storage.nft_data()
         
         if not wallets:
-            wallets = await self.storage.wallets()
+            if isinstance(self.storage, MemoryStorage):
+                wallets = self.storage.wallets()
+            else:
+                wallets = await self.storage.wallets()
         
         wallets = wallets
         result = []
