@@ -89,7 +89,7 @@ class TransactionBuilder:
     async def get_balance(
         self,
         wallet: Union[Wallet, str],
-        human_readable: bool = False
+        human_readable: bool = False,
     ):
         balance = await self.w3.eth.get_balance(wallet if isinstance(wallet, str) else wallet.address)
         
@@ -102,7 +102,9 @@ class TransactionBuilder:
         from_wallet: Wallet,
         to: Union[Wallet, str],
         amount: float,
-        return_signed_tx: bool = False
+        return_signed_tx: bool = False,
+        gas: int = 21000,
+        tries: int = 3,
     ):
         '''used to send ETH (or the main chain token e.g BSCMainToken=BNB) from "from_wallet" to "to"
         args:
@@ -116,21 +118,22 @@ class TransactionBuilder:
             assert self.w3.is_address(to), "'to' argument must be a Minter.Wallet or a vaild evm address"
             to = Wallet(to, "")
         
-        gas = await self.gas
+        gas_price = await self.gas
         data = {
             "from": self.w3.to_checksum_address(from_wallet.address),
             "to": self.w3.to_checksum_address(to.address),
             "value": amount,
             "nonce": (await self.nonce(from_wallet)),
-            "gas": 21000,
-            "maxFeePerGas": gas,
-            "maxPriorityFeePerGas": gas,
+            "gas": gas,
+            "maxFeePerGas": gas_price,
+            "maxPriorityFeePerGas": gas_price,
             "chainId": await self._id
         }
         return (await self.execute(
             tx=data,
             signer=from_wallet,
             broadcast=not return_signed_tx,
+            tries=tries
         ))
     
     async def execute_write_function(

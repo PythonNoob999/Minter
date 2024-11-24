@@ -146,7 +146,7 @@ class Minter:
         self,
         wallets: List[Wallet] = None,
         human_readable: bool = False,
-        return_raw_data: bool = False
+        return_raw_data: bool = False,
     ) -> Union[List[float], float]:
         if not wallets:
             if isinstance(self.storage, MemoryStorage):
@@ -156,9 +156,9 @@ class Minter:
         
         result = await self.execute_many(
             tx_builder_method=self.tx_builder.get_balance,
+            bulk=True,
             wallets=wallets,
             human_readable=human_readable,
-            bulk=True
         )
         
         if return_raw_data:
@@ -172,6 +172,8 @@ class Minter:
         hold: int = 3,
         subtract: bool = False,
         wallets: List[Wallet] = None,
+        gas: int = 21000,
+        tries: int = 3
     ) -> float:
         '''this method is used to distribute fees from fees_wallet to wallets
         Args:
@@ -207,7 +209,9 @@ class Minter:
                 tx_builder_method=self.tx_builder.send_eth,
                 from_wallet=fees_wallet,
                 to=wallet,
-                amount=n
+                amount=n,
+                gas=gas,
+                tries=tries
             )
             await asyncio.sleep(hold)
             total += n
