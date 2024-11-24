@@ -157,7 +157,8 @@ class Minter:
         result = await self.execute_many(
             tx_builder_method=self.tx_builder.get_balance,
             wallets=wallets,
-            human_readable=human_readable
+            human_readable=human_readable,
+            bulk=True
         )
         
         if return_raw_data:
