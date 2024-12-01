@@ -26,7 +26,7 @@ async def main():
 
     # minting
     time_to_mint = await minter.mint_bulk(
-        nft_contract=my_nft_contract,
+        opensea_contract_base_chain,
         abi=abi,
         # mint only using first 5 wallets
         wallets=wallets[:5],
